@@ -1,0 +1,39 @@
+#!/bin/sh
+
+. /etc/rc.subr
+
+# PROVIDE: zpool_shared
+# REQUIRE: zpool
+# BEFORE: zfs_shared
+
+name="zpool_shared"
+desc="Import shared ZPOOLs"
+rcvar="zpool_shared_enable"
+start_cmd="zpool_shared_start"
+stop_cmd="zpool_shared_stop"
+required_modules="zfs"
+: ${zpool_shared_devices:=""}
+: ${zpool_shared_pools:=""}
+
+zpool_shared_start()
+{
+	local device
+	for device in ${zpool_shared_devices:-}
+	do
+		echo Importing ZPOOLs from device ${device}.
+		/sbin/zpool import -a -N -f -d ${device}
+	done
+}
+
+zpool_shared_stop()
+{
+	local pool
+	for pool in ${zpool_shared_pools:-}
+	do
+		echo Exporting ZPOOL ${pool}.
+		/sbin/zpool export ${pool}
+	done
+}
+
+load_rc_config $name
+run_rc_command "$1"

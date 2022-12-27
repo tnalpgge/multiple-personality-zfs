@@ -1,0 +1,4 @@
+* Ubuntu Installer materials
+
+Start your installation with Ubuntu because its installer is more opinionated.
+

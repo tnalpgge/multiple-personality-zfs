@@ -1,0 +1,5 @@
+* FreeBSD Installer materials
+
+In order to make this setup work when installing from non-customized FreeBSD media, you must partition disks in the shell, create filesystems, and mount them in an expected location (~/mnt~).  The scripts in this directory should be run in the implied numerical order.  
+
+You must also leave some files behind for the installer to copy into place in the live system.  Files in subdirectories of this one must be placed in subdirectories of ~/tmp~ as the installer expects.

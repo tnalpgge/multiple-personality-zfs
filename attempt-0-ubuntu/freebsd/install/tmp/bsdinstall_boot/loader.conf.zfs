@@ -1,0 +1,2 @@
+kern.geom.label.disk_ident.label="0"
+kern.geom.label.gptid.enable="0"

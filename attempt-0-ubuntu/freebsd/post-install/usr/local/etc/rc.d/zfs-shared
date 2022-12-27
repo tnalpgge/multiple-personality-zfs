@@ -1,0 +1,123 @@
+#!/bin/sh
+
+. /etc/rc.subr
+
+# PROVIDE: zfs_shared
+# REQUIRE: zpool_shared
+
+name="zfs_shared"
+desc="Mount and share extra ZFS datasets"
+rcvar="zfs_shared_enable"
+start_cmd="zfs_shared_start"
+stop_cmd="zfs_shared_stop"
+poststart_cmd=""
+required_modules="zfs"
+: ${zfs_shared_datasets:=""}
+
+essential_function() {
+	local func=${1}
+	if [ $func != $(command -v $func) ]
+	then
+		echo Essential function ${func} not defined >&2
+		exit 2
+	fi
+}
+
+zfs_shared_member() {
+	local name=${1:-}
+	local dataset
+	for dataset in ${zfs_shared_datasets:-}
+	do
+		case x${name} in
+		x${dataset}*)
+			return 0
+			;;
+		esac
+	done
+	return 1
+}
+
+zfs_shared_analyze() {
+	local dataset=${1:-}
+	can_mount=false
+	has_mountpoint=false
+	is_mounted=false
+	set $(zfs get -H -o value canmount,mountpoint,mounted ${dataset})
+	if [ x${1} = xon ]; then can_mount=true; fi
+	if [ x${2} != none ]; then has_mountpoint=true; fi
+	if [ x${3} = xyes ]; then is_mounted=true; fi
+}
+
+zfs_shared_maybe_operate() {
+	local dataset=${1}
+	local verb=${2}
+	local operation=${3}
+	if ${can_mount} && ${has_mountpoint}
+	then
+		case ${operation}${is_mounted} in
+		mountfalse|unmounttrue)
+			echo ${verb} ZFS dataset ${dataset}.
+			/sbin/zfs ${operation} ${dataset}
+			;;
+		mounttrue|unmountfalse)
+			echo ZFS dataset ${dataset} already ${operation}ed.
+			;;
+		*)
+			echo Assertion failure >&2
+			exit 3
+			;;
+		esac
+	fi
+}
+
+
+zfs_shared_maybe_mount() {
+	local dataset=${1}
+	zfs_shared_maybe_operate ${dataset} Mounting mount
+}
+
+zfs_shared_maybe_unmount() {
+	local dataset=${1}
+	zfs_shared_maybe_operate ${dataset} Unmounting unmount
+}
+
+zfs_shared_operate() {
+	local dataset
+	essential_function get_datasets
+	essential_function maybe_operate
+	for dataset in $(get_datasets)
+	do
+		if zfs_shared_member ${dataset}
+		then
+			zfs_shared_analyze ${dataset}
+			maybe_operate ${dataset}
+		fi
+	done
+}
+
+zfs_shared_start() {
+	get_datasets() {
+		/sbin/zfs list -H -o name | sort
+	}
+	maybe_operate() {
+		zfs_shared_maybe_mount "$@"
+	}
+	zfs_shared_operate
+	unset -f get_datasets
+	unset -f maybe_operate
+}
+
+zfs_shared_stop() {
+	get_datasets() {
+		/sbin/zfs list -H -o name | sort -r
+	}
+	maybe_operate() {
+		zfs_shared_maybe_unmount "$@"
+	}
+	zfs_shared_operate
+	unset -f get_datasets
+	unset -f maybe_operate
+}
+
+load_rc_config $name
+run_rc_command "$1"

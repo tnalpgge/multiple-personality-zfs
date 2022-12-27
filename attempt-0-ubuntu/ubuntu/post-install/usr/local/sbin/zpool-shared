@@ -1,0 +1,47 @@
+#!/bin/sh
+
+set -e
+
+myname=${0##*/}
+defaults=/etc/default/${myname}
+
+usage() {
+	echo Usage: ${myname} '{start|stop}' >&2
+	exit 1
+}
+
+if [ -r $defaults ]
+then
+	. $defaults
+fi
+
+: ${ZPOOL_SHARED_DEVICES:=""}
+: ${ZPOOL_SHARED_POOLS:=""}
+
+zpool_shared_start() {
+	for device in ${ZPOOL_SHARED_DEVICES:-}
+	do
+		echo Importing ZPOOLs from device ${device}.
+		/usr/sbin/zpool import -a -N -f -d ${device}
+	done
+}
+
+zpool_shared_stop() {
+	for pool in ${ZPOOL_SHARED_POOLS:-}
+	do
+		echo Exporting ZPOOL ${pool}.
+		/usr/sbin/zpool export ${pool}
+	done
+}
+
+case "${1:-}" in
+	start)
+		zpool_shared_start
+		;;
+	stop)
+		zpool_shared_stop
+		;;
+	*)
+		usage
+		;;
+esac

@@ -1,0 +1,6 @@
+[Unit]
+Description=Shared ZFS startup target
+Requires=zfs-shared.service
+
+[Install]
+WantedBy=multi-user.target

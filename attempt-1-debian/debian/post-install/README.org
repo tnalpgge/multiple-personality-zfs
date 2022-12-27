@@ -1,0 +1,5 @@
+* Debian Post-Install Customization
+
+Files in subdirectories of this one should be copied into the indicated locations, relative to the root of your live file system.
+
+Scripts in this directory perform modifications to the system.  You must run the scripts with super-user permissions.  (Consider installing the *doas* or *sudo* packages.)  Scripts with lower-numbered numerical prefixes (i.e. closer to 00) may be run before files are copied.  Scripts with higher-number numerical prefixes (i.e. closer to 99) must be run after files are copied.

@@ -1,0 +1,2 @@
+ZPOOL_SHARED_DEVICES="/dev/sdb1"
+ZPOOL_SHARED_POOLS="zdata"

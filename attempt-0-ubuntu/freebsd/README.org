@@ -1,0 +1,4 @@
+* The FreeBSD Personality
+
+- [[file:install/][Installation]]
+- [[file:post-install/][Post-install configuration]]

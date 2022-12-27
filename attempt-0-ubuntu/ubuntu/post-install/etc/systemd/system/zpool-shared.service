@@ -1,0 +1,12 @@
+[Unit]
+Description=Shared ZPOOL Import/Export
+Requires=zfs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/zpool-shared start
+ExecStop=/usr/local/sbin/zpool-shared stop
+
+[Install]
+WantedBy=zpool-shared.target

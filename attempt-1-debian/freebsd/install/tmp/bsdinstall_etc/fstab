@@ -1,0 +1,2 @@
+/dev/da0p1	/boot/efi	msdosfs	rw,sync,noatime,-m=600,-M=700	2	2
+/dev/da0p4	none	swap	sw	0	0

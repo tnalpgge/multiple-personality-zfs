@@ -1,0 +1,13 @@
+[Unit]
+Description=Shared ZFS Datasets Mount/Unmount
+Requires=zpool-shared.target
+After=zpool-shared.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/zfs-shared start
+ExecStop=/usr/local/sbin/zfs-shared stop
+
+[Install]
+WantedBy=zfs-shared.target

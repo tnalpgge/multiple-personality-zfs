@@ -1,0 +1,154 @@
+* Multiple ZFS Personalities
+
+This directory structure demonstrates how to configure a computer to boot into either Ubuntu or FreeBSD and share a common pool of ZFS storage. 
+
+Start by installing Ubuntu first because it is more opinionated.
+
+1. [[file:ubuntu/][Ubuntu]]
+2. [[file:freebsd/][FreeBSD]]
+
+Is this good for production IT use?  No.  But it should be fine for a hobbyist setup.  
+
+*BACK UP YOUR DATA BEFORE YOU ATTEMPT THIS.*  Or attempt it on a machine that has no valuable data whatsoever.
+
+If you get it working successfully, you must ensure that you don't upgrade either operating system to the point where one of them expects a newer on-disk ZPOOL or ZFS format than the other one can handle.
+
+When I performed the experiment, I was using:
+
+- A virtual machine in VMware Fusion 12 Pro
+  - 8 GB memory
+  - 2 vCPU
+  - CD-ROM drive
+  - first SCSI disk: 40 GB, divided between operating systems
+  - second SCSI disk: 20 GB, as the shared ZPOOL
+- Ubuntu Desktop 22.04 LTS "Jammy Jellyfish"
+- FreeBSD 13.1-RELEASE
+
+It should be reasonably easy to adapt these instructions from Ubuntu desktop to server, or Ubuntu to Debian.
+
+** Resulting disk layout
+
+*** Ubuntu
+
+#+begin_example
+# parted -l
+Model: VMware, VMware Virtual S (scsi)
+Disk /dev/sda: 42.9GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags: 
+
+Number  Start   End     Size    File system     Name         Flags
+ 1      1049kB  1024MB  1023MB  fat32                        boot, esp
+ 2      1024MB  3072MB  2048MB  ext4
+ 3      3072MB  20.5GB  17.4GB  xfs
+ 4      20.5GB  22.5GB  2048MB  linux-swap(v1)               swap
+ 5      22.5GB  42.9GB  20.4GB  zfs             freebsd-zfs
+
+
+Model: VMware, VMware Virtual S (scsi)
+Disk /dev/sdb: 21.5GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags: 
+
+Number  Start   End     Size    File system  Name                  Flags
+ 1      1049kB  21.5GB  21.5GB  zfs          zfs-c1c88326a832e464
+ 9      21.5GB  21.5GB  8389kB
+
+
+#+end_example
+
+#+begin_example
+$ zpool list
+NAME    SIZE  ALLOC   FREE  CKPOINT  EXPANDSZ   FRAG    CAP  DEDUP    HEALTH  ALTROOT
+zdata  19.5G   662K  19.5G        -         -     0%     0%  1.00x    ONLINE  -
+#+end_example
+
+#+begin_example
+$ zfs list
+NAME         USED  AVAIL     REFER  MOUNTPOINT
+zdata        554K  18.9G       24K  /zdata
+zdata/home  77.5K  18.9G     77.5K  /zhome
+#+end_example
+
+#+begin_example
+$ df
+Filesystem     1K-blocks    Used Available Use% Mounted on
+tmpfs             814024    1676    812348   1% /run
+/dev/sda3       16990208 8220884   8769324  49% /
+tmpfs            4070104       0   4070104   0% /dev/shm
+tmpfs               5120       0      5120   0% /run/lock
+/dev/sda2        1929776  168248   1645152  10% /boot
+/dev/sda1         997432    8852    988580   1% /boot/efi
+zdata           19807744     128  19807616   1% /zdata
+zdata/home      19807744     128  19807616   1% /zhome
+tmpfs             814020    2400    811620   1% /run/user/1000
+#+end_example
+
+*** FreeBSD
+
+#+begin_example
+[tony@fbzex ~]$ gpart show
+=>      34  83886013  da0  GPT  (40G)
+        34      2014       - free -  (1.0M)
+      2048   1998848    1  efi  (976M)
+   2000896   3999744    2  linux-data  (1.9G)
+   6000640  34000896    3  linux-data  (16G)
+  40001536   3999744    4  linux-swap  (1.9G)
+  44001280  39884767    5  freebsd-zfs  (19G)
+
+=>      34  41942973  da1  GPT  (20G)
+        34      2014       - free -  (1.0M)
+      2048  41922560    1  apple-zfs  (20G)
+  41924608     16384    9  solaris-reserved  (8.0M)
+  41940992      2015       - free -  (1.0M)
+
+#+end_example
+
+#+begin_example
+$ zpool list
+NAME    SIZE  ALLOC   FREE  CKPOINT  EXPANDSZ   FRAG    CAP  DEDUP    HEALTH  ALTROOT
+zdata  19.5G   438K  19.5G        -         -     0%     0%  1.00x    ONLINE  -
+zroot    19G  1.55G  17.4G        -         -     0%     8%  1.00x    ONLINE  -
+#+end_example
+
+#+begin_example
+$ zfs list
+NAME                 USED  AVAIL     REFER  MOUNTPOINT
+zdata                426K  18.9G       24K  /zdata
+zdata/home          67.5K  18.9G     67.5K  /zhome
+zroot               1.55G  16.9G       24K  /zroot
+zroot/ROOT          1.55G  16.9G       24K  none
+zroot/ROOT/default  1.55G  16.9G     1.55G  /
+zroot/tmp             25K  16.9G       25K  /tmp
+zroot/usr            112K  16.9G       24K  /usr
+zroot/usr/home      39.5K  16.9G     39.5K  /usr/home
+zroot/usr/ports       24K  16.9G       24K  /usr/ports
+zroot/usr/src         24K  16.9G       24K  /usr/src
+zroot/var            382K  16.9G       24K  /var
+zroot/var/audit       24K  16.9G       24K  /var/audit
+zroot/var/crash     24.5K  16.9G     24.5K  /var/crash
+zroot/var/log        254K  16.9G      254K  /var/log
+zroot/var/mail        24K  16.9G       24K  /var/mail
+zroot/var/tmp       32.5K  16.9G     32.5K  /var/tmp
+#+end_example
+
+#+begin_example
+$ df
+Filesystem         1K-blocks    Used    Avail Capacity  Mounted on
+zroot/ROOT/default  19298993 1627553 17671439     8%    /
+devfs                      1       1        0   100%    /dev
+zdata               19807854      24 19807830     0%    /zdata
+zdata/home          19807897      67 19807830     0%    /zhome
+zroot/usr/home      17671479      39 17671439     0%    /usr/home
+zroot/tmp           17671465      26 17671439     0%    /tmp
+zroot/usr/ports     17671463      24 17671439     0%    /usr/ports
+zroot/var/crash     17671464      24 17671439     0%    /var/crash
+zroot               17671463      24 17671439     0%    /zroot
+zroot/var/audit     17671463      24 17671439     0%    /var/audit
+zroot/usr/src       17671463      24 17671439     0%    /usr/src
+zroot/var/log       17671693     254 17671439     0%    /var/log
+zroot/var/mail      17671463      24 17671439     0%    /var/mail
+zroot/var/tmp       17671472      32 17671439     0%    /var/tmp
+#+end_example

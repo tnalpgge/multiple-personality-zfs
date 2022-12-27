@@ -1,0 +1,6 @@
+[Unit]
+Description=Shared ZPOOL startup target
+Requires=zpool-shared.service
+
+[Install]
+WantedBy=zfs-shared.target
