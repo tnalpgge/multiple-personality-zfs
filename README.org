@@ -1,0 +1,16 @@
+* Multiple Personality ZFS
+
+This repository houses the artifacts associated with a series of posts:
+
+1. [[https://tnalpgge.github.io/technically-nightshade/posts/mpzfs-0-questionable-idea][Multiple Personality ZFS Part 0: A Questionable Idea]]
+1. [[https://tnalpgge.github.io/technically-nightshade/posts/mpzfs-1-switching-personalities][Multiple Personality ZFS Part 1: Switching Personalities]]
+1. [[https://tnalpgge.github.io/technically-nightshade/posts/mpzfs-2-export-import-business][Multiple Personality ZFS Part 2: The Export/Import Business]]
+1. [[https://tnalpgge.github.io/technically-nightshade/posts/mpzfs-3-no-special-snowflakes][Multiple Personality ZFS Part 3: No Special Snowflakes]]         
+   
+Artifacts from the first attempt at the experiment, on a machine which ran both [[https://ubuntu.com/][Ubuntu]] 22.04 LTS "Jammy Jellyfish" and [[https://www.freebsd.org][FreeBSD]] 13.1-RELEASE, are in the [[./attempt-0-ubuntu]] directory.
+
+Artifacts from the second attempt, on a machine which ran both [[https://www.debian.org/][Debian]] 11 "Bullseye" and FreeBSD 13.1-RELEASE, are in the [[./attempt-1-debian]] directory.
+
+* License
+
+[[LICENSE.txt][BSD 3-Clause license]], also found at <https://opensource.org/licenses/BSD-3-Clause>
